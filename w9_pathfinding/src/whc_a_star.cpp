@@ -46,93 +46,49 @@ vector<Path> WHCAStar::mapf_(
 ) {
     bool edge_collision = env->edge_collision();
 
-    priority_queue<pair<int, int>, vector<pair<int, int>>, std::greater<pair<int, int>>> agent_queue;
-    for (size_t agent_id = 0; agent_id < agents.size(); agent_id++)
-        agent_queue.push({0, agent_id});
+    bool all_agents_done = false;
+    while (!all_agents_done) {
+        all_agents_done = true;
 
-    std::unordered_map<int, int> destinations;
-    destinations.reserve(agents.size());
+        for (Agent& agent : agents) {
+            int time = agent.path.size() - 1;
+            int min_terminal_time = rt.last_time_reserved(agent.goal);
 
-    while (!agent_queue.empty()) {
-        auto [time, agent_id] = agent_queue.top();
-        agent_queue.pop();
-
-        Agent& agent = agents[agent_id];
-
-        if (rt.last_time_reserved(agent.goal) > max_length)
-            return {};
-
-        int active_window = std::min(window_size, max_length - time);
-        if (active_window <= 0) {
-            if (agent.position() == agent.goal) {
-                destinations[agent.goal] = agent_id;
+            if (agent.position() == agent.goal && min_terminal_time <= time) {
+                // Agent has reached its goal and can stay without causing conflicts
                 continue;
             }
-            break;
-        }
 
-        Path path = st_a_star_.find_path_with_depth_limit(
-            agent.position(),
-            agent.goal,
-            active_window,
-            &rt,
-            agent.rrs.get(),
-            rt.last_time_reserved(agent.goal),
-            time
-        );
-        if (path.empty())
-            return {};
-
-        if (path.size() == 1) {
-            // the agent is at his destination and does not need to move
-            agent.add_path(path);
-            rt.add_path(time + 1, path, false, edge_collision);
-            destinations[agent.goal] = agent_id;
-        }
-        else {
-            if (!destinations.empty()) {
-                for (int p : path) {
-                    if (!destinations.count(p))
-                        continue;
-                    // the path disturbed another agent that was at the destination,
-                    // so we need to add the another agent to the queue to avoid any collisions
-                    int other_agent_id = destinations[p];
-                    destinations.erase(p);
-
-                    Agent& other_agent = agents[other_agent_id];
-                    int last_action_time = other_agent.path.size() - 1;
-                    if (last_action_time > time) {
-                        agent_queue.push({last_action_time, other_agent_id});
-                    }
-                    else {
-                        if (time > last_action_time) {
-                            Path rest(time - last_action_time, other_agent.goal);
-                            other_agent.add_path(rest);
-                        }
-                        agent_queue.push({time, other_agent_id});
-                    }
-                }
+            if (min_terminal_time > max_length) {
+                // Goal is reserved beyond the planning horizon — cannot reach it safely
+                return {};
             }
 
-            agent.path.pop_back();
+            int active_window = std::min(window_size, max_length - time);
+            if (active_window <= 0)
+                return {};
+
+            Path path = st_a_star_.find_path_with_depth_limit(
+                agent.position(),
+                agent.goal,
+                active_window,
+                &rt,
+                agent.rrs.get(),
+                min_terminal_time,
+                time
+            );
+            if (path.empty())
+                return {};
+
+            all_agents_done = false;
             agent.add_path(path);
             rt.add_path(time, path, false, edge_collision);
-            agent_queue.push({time + path.size() - 1, agent_id});
         }
     }
 
-    if (destinations.size() != agents.size())
-        return {};
-
     vector<Path> paths;
-    paths.reserve(agents.size());
-    for (auto &agent: agents) {
-        Path& path = agent.path;
-        while (path.size() > 1 && path.back() == agent.goal && path[path.size() - 2] == agent.goal)
-            path.pop_back();
-
-        paths.push_back(path);
-    }
+    for (auto &agent: agents)
+        paths.push_back(agent.path);
 
     return paths;
 }
