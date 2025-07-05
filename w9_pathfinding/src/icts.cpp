@@ -309,11 +309,11 @@ vector<Path> icts::LowLevel::search(vector<int>& costs) {
 
 bool icts::LowLevel::enhanced_pairwise_pruning() {
     for (int i=0; i < num_agents_ - 1; i++) {
-        if (mdds_[i].depth == 0)
+        if (mdds_[i].empty())
             continue;
 
         for (int j=i+1; j < num_agents_; j++) {
-            if (mdds_[j].depth == 0)
+            if (mdds_[j].empty())
                 continue;
 
             if (high_resolution_clock::now() > terminate_time_)

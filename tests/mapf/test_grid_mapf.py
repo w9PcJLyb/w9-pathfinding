@@ -87,7 +87,7 @@ def check_paths(graph, paths):
 
 class TestGridMAPF(unittest.TestCase):
     """
-    pytest tests/mapf/test_grid.py::TestGridMAPF
+    pytest tests/mapf/test_grid_mapf.py::TestGridMAPF
     """
 
     def test_switch_env(self):
