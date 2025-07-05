@@ -72,5 +72,4 @@ class SpaceTimeAStar {
 
         ResumableSearch* ensure_rrs(ResumableSearch* rrs, int goal);
         Path reconstruct_path(int start, Node* node);
-        Path find_path_with_length_limit__static(int start, int goal, int max_length);
 };

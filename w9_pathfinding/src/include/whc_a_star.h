@@ -30,7 +30,8 @@ class WHCAStar : public AbsMAPF {
         }
 
         void add_path(Path& path_) {
-            path.insert(path.end(), path_.begin(), path_.end());
+            assert(path.back() == path_[0]);
+            path.insert(path.end(), path_.begin() + 1, path_.end());
         }
     };
 

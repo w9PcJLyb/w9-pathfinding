@@ -20,18 +20,14 @@ void icts::ResumableBFS::update_data(int depth) {
         queue_.pop();
 
         if (rt_) {
-            if (!rt_->is_reserved(time + 1, node_id))
-                add_record(time + 1, node_id, node_id);
-
             auto reserved_edges = rt_->get_reserved_edges(time, node_id);
-            for (auto& [neighbor_id, cost] : env_->get_neighbors(node_id)) {
+            for (auto& [neighbor_id, cost] : env_->get_neighbors(node_id, false, true)) {
                 if (!reserved_edges.count(neighbor_id) && !rt_->is_reserved(time + 1, neighbor_id))
                     add_record(time + 1, neighbor_id, node_id);
             }
         }
         else {
-            add_record(time + 1, node_id, node_id);
-            for (auto& [neighbor_id, cost] : env_->get_neighbors(node_id))
+            for (auto& [neighbor_id, cost] : env_->get_neighbors(node_id, false, true))
                 add_record(time + 1, neighbor_id, node_id);
         }
 
@@ -313,11 +309,11 @@ vector<Path> icts::LowLevel::search(vector<int>& costs) {
 
 bool icts::LowLevel::enhanced_pairwise_pruning() {
     for (int i=0; i < num_agents_ - 1; i++) {
-        if (mdds_[i].depth == 0)
+        if (mdds_[i].empty())
             continue;
 
         for (int j=i+1; j < num_agents_; j++) {
-            if (mdds_[j].depth == 0)
+            if (mdds_[j].empty())
                 continue;
 
             if (high_resolution_clock::now() > terminate_time_)

@@ -47,6 +47,7 @@ namespace icts {
             MDD() : start(-1), goal(-1), depth(-1) {};
             MDD(int start, int goal, int depth) : start(start), goal(goal), depth(depth) {};
             MDD(ResumableBFS& bfs);
+            bool empty() {return data.empty();};
             void print(Env* env);
     };
 
@@ -63,6 +64,7 @@ namespace icts {
 
             MDD2(MDD& mdd1, MDD& mdd2, bool edge_collision);
             pair<MDD, MDD> unfold();
+            bool empty() {return data.empty();};
             void print(Env* env);
 
         private:
