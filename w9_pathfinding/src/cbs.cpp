@@ -313,8 +313,14 @@ Path CBS::find_new_path(
     ReservationTable rt_ = rt;
     vector<int> landmarks = populate_reservation_table(rt_, node, tree, agent_id);
 
+    // The negative constraint, the conflict we are resolving
     int conflict_time = node.constraint.conflict.time;
+
+    // Times of the closest positive constraints (landmarks) around the conflict
+    // left_landmark is the most recent landmark before or at the conflict time
+    // right_landmark is the earliest landmark after the conflict time
     int left_landmark = -1, right_landmark = -1;
+
     for (int time : landmarks) {
         if (time <= conflict_time)
             left_landmark = std::max(time, left_landmark);
@@ -322,39 +328,43 @@ Path CBS::find_new_path(
             right_landmark = right_landmark == -1 ? time : std::min(time, right_landmark);
     }
 
+    // For vertex conflicts, left_landmark should not equal the conflict time
     if (node.constraint.conflict.is_vertex_conflict())
         assert(conflict_time != left_landmark);
 
     Path path = node.solutions[agent_id];
 
-    if (right_landmark >= (int)path.size() - 1) {
-        // right_landmark is located at the agent's goal position,
-        // need to update the last part of the path with a length restriction
-        left_landmark = std::max(0, left_landmark);
-        ensure_path_length(path, left_landmark);
+    if (left_landmark >= (int)path.size()) {
+        // If the left_landmark is outside the current path, the conflict is also outside
 
-        Path part = st_a_star_.find_path_with_length_limit(
-            path[left_landmark],
-            agent.goal,
-            right_landmark - left_landmark,
-            &rt_,
-            agent.rrs.get(),
-            rt_.last_time_reserved(agent.goal),
-            left_landmark
-        );
-        if (part.empty())
-            return {};
-
-        path.resize(left_landmark);
-        path.insert(path.end(), part.begin(), part.end());
-
-        return path;
+        // Rebuild the path starting from the last known landmark in the path
+        std::sort(landmarks.begin(), landmarks.end());
+        int last_landmark = 0;
+        for (int time : landmarks) {
+            if (time < (int)path.size())
+                last_landmark = time;
+            else if (time <= left_landmark) {
+                Path part = st_a_star_.find_path_with_exact_length(
+                    path[last_landmark],
+                    agent.goal,
+                    time - last_landmark,
+                    &rt_,
+                    last_landmark
+                );
+                if (part.empty())
+                    return {};
+                path.resize(last_landmark);  // Trim to the last known good point
+                path.insert(path.end(), part.begin(), part.end());
+                last_landmark = time;
+            }
+            else
+                break;
+        }
     }
 
-    ensure_path_length(path, std::max(left_landmark, right_landmark));
-
     if (left_landmark == -1 && right_landmark == -1) {
-        // there are no landmarks, need to find a completely new path
+        // No landmarks exist at all.
+        // Need to update the entire path from start to goal within max_length.
         path = st_a_star_.find_path_with_length_limit(
             agent.start,
             agent.goal,
@@ -367,16 +377,32 @@ Path CBS::find_new_path(
             return {};
     }
     else if (left_landmark == -1 && right_landmark >= 0) {
-        // need to update the first part of the path
-        Path part = st_a_star_.find_path_with_exact_length(
-            agent.start, path[right_landmark], right_landmark, &rt_
-        );
-        if (part.empty())
-            return {};
-        std::copy(part.begin(), part.end(), path.begin());
+        // No left landmark — need to update the first part of the path
+        // from start to the node at right_landmark.
+        if (right_landmark < (int)path.size() - 1) {
+            Path part = st_a_star_.find_path_with_exact_length(
+                agent.start, path[right_landmark], right_landmark, &rt_
+            );
+            if (part.empty())
+                return {};
+            std::copy(part.begin(), part.end(), path.begin());
+        }
+        else {
+            path = st_a_star_.find_path_with_length_limit(
+                agent.start,
+                agent.goal,
+                right_landmark,
+                &rt_,
+                agent.rrs.get(),
+                rt_.last_time_reserved(agent.goal),
+                0
+            );
+            if (path.empty())
+                return {};
+        }
     }
     else if (left_landmark >= 0 && right_landmark == -1) {
-        // need to update the last part of the path
+        // No right landmark — update the remaining path to the goal
         Path part = st_a_star_.find_path_with_length_limit(
             path[left_landmark],
             agent.goal,
@@ -392,21 +418,35 @@ Path CBS::find_new_path(
         path.insert(path.end(), part.begin(), part.end());
     }
     else {
-        // need to update the middle part of the path
-        Path part = st_a_star_.find_path_with_exact_length(
-            path[left_landmark],
-            path[right_landmark],
-            right_landmark - left_landmark,
-            &rt_,
-            left_landmark
-        );
-        if (part.empty())
-            return {};
-        std::copy(part.begin(), part.end(), path.begin() + left_landmark);
+        // Both landmarks exist — update the middle portion of the path
+        if (right_landmark < (int)path.size() - 1) {
+            Path part = st_a_star_.find_path_with_exact_length(
+                path[left_landmark],
+                path[right_landmark],
+                right_landmark - left_landmark,
+                &rt_,
+                left_landmark
+            );
+            if (part.empty())
+                return {};
+            std::copy(part.begin(), part.end(), path.begin() + left_landmark);
+        }
+        else {
+            Path part = st_a_star_.find_path_with_length_limit(
+                path[left_landmark],
+                agent.goal,
+                right_landmark - left_landmark,
+                &rt_,
+                agent.rrs.get(),
+                rt_.last_time_reserved(agent.goal),
+                left_landmark
+            );
+            if (part.empty())
+                return {};
+            path.resize(left_landmark);
+            path.insert(path.end(), part.begin(), part.end());
+        }
     }
-
-    while (path.size() > 1 && path.back() == path.at(path.size() - 2))
-        path.pop_back();
 
     return path;
 }

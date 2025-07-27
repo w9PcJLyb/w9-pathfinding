@@ -192,7 +192,23 @@ vector<vector<pair<int, double>>> maas::AStarSolver::get_neighbors(Node& node) {
 
             // Moving to another node incurs a penalty,
             // which depends on how many time steps we've spent at the goal.
-            add_moving_cost = get_waiting_time(node.id, i) * a.goal_pause_cost;
+            int waiting_time = get_waiting_time(node.id, i);
+            add_moving_cost = waiting_time * a.goal_pause_cost;
+
+            // If an environment does not allow to do pause action at the goal
+            if (a.goal_pause_cost == -1) {
+                if (!rt_ || rt_->last_time_reserved(a.goal) <= time) {
+                    // We still want an agent to do pause action,
+                    // because it is the agent's destination
+                    neighbors[i].push_back({p, 0});
+                    if (waiting_time > 0) {
+                        // But if the agent decide to make pause action
+                        // where pause action is not allowed
+                        // the agent can't do any other actions
+                        continue;
+                    }
+                }
+            }
         }
 
         if (!rt_) {
@@ -248,9 +264,8 @@ maas::Node maas::AStarSolver::create_node(int parent, int time, double distance,
 }
 
 int maas::AStarSolver::get_waiting_time(int node_id, int agent_id) {
-    int waiting_time = 0;
+    int waiting_time = -1;
     int goal = agents_[agent_id].goal;
-    node_id = tree_.at(node_id).parent;
     while (node_id >= 0 && tree_[node_id].positions[agent_id] == goal) {
         waiting_time++;
         node_id = tree_[node_id].parent;
@@ -275,7 +290,7 @@ vector<int> maas::AStarSolver::to_hash(vector<int>& positions, int parent) {
         if (positions[i] != agents_[i].goal)
             hash[i] = positions[i];
         else if (parent >= 0)
-            hash[i] = -1 - get_waiting_time(parent, i);
+            hash[i] = -2 - get_waiting_time(parent, i);
         else
             hash[i] = -1;
     }
@@ -375,7 +390,10 @@ maas::AStarODSolver::AStarODSolver(Env* env, vector<int>& starts, vector<int>& g
 };
 
 vector<pair<int, double>> maas::AStarODSolver::get_neighbors(Node& node) {
+    vector<pair<int, double>> neighbors;
+
     int agent_id = node.time % num_agents_;
+    int time = node.time / num_agents_;
     int p = node.positions[agent_id];
     auto &a = agents_[agent_id];
 
@@ -390,10 +408,24 @@ vector<pair<int, double>> maas::AStarODSolver::get_neighbors(Node& node) {
         // Moving to another node incurs a penalty,
         // which depends on how many time steps we've spent at the goal.
         int parent = agent_id == 0 ? node.id : node.parent;
-        add_moving_cost = get_waiting_time(parent, agent_id) * a.goal_pause_cost;
-    }
+        int waiting_time = get_waiting_time(parent, agent_id);
+        add_moving_cost = waiting_time * a.goal_pause_cost;
 
-    vector<pair<int, double>> neighbors;
+        // If an environment does not allow to do pause action at the goal
+        if (a.goal_pause_cost == -1) {
+            if (!rt_ || rt_->last_time_reserved(a.goal) <= time) {
+                // We still want an agent to do pause action,
+                // because it is the agent's destination
+                neighbors.push_back({p, 0});
+                if (waiting_time > 0) {
+                    // But if the agent decide to make pause action
+                    // where pause action is not allowed
+                    // the agent can't do any other actions
+                    return neighbors;
+                }
+            }
+        }
+    }
 
     if (!rt_) {
         for (auto &[n, cost] : env_->get_neighbors(p, false, true)) {

@@ -1,7 +1,7 @@
 import unittest
 from collections import defaultdict
 from w9_pathfinding import mapf
-from w9_pathfinding.envs import Graph, Grid
+from w9_pathfinding.envs import Grid
 from w9_pathfinding.mapf import ReservationTable
 from tests.factory import GridFactory
 
@@ -27,12 +27,12 @@ COMPLETE_ALGORITHMS = [
         "params": {"ict_pruning": True},
     },
     {
-        "name": "A(od=False)",
+        "name": "A*(od=False)",
         "class": mapf.MultiAgentAStar,
         "params": {"operator_decomposition": False},
     },
     {
-        "name": "A(od=True)",
+        "name": "A*(od=True)",
         "class": mapf.MultiAgentAStar,
         "params": {"operator_decomposition": True},
     },
@@ -85,12 +85,12 @@ def check_paths(graph, paths):
     return True
 
 
-class TestMAPF(unittest.TestCase):
+class TestGridMAPF(unittest.TestCase):
     """
-    pytest tests/mapf/test_mapf.py::TestMAPF
+    pytest tests/mapf/test_grid_mapf.py::TestGridMAPF
     """
 
-    def test_switch_graph(self):
+    def test_switch_env(self):
         graph_factory = GridFactory(width=4, height=4)
 
         g1 = graph_factory()
@@ -107,20 +107,6 @@ class TestMAPF(unittest.TestCase):
             with self.subTest(a["name"]):
                 paths = a["class"](grid).mapf([], [], **a.get("params", {}))
                 self.assertEqual(paths, [])
-
-    def test_with_directed_graph(self):
-        graph = Graph(5, edges=[[0, 2], [1, 2], [2, 3], [2, 4]])
-        starts = [0, 1]
-        goals = [3, 4]
-
-        for a in MAPF_ALGORITHMS:
-            with self.subTest(a["name"]):
-                paths = a["class"](graph).mapf(starts, goals, **a.get("params", {}))
-
-                self.assertTrue(check_paths(graph, paths))
-                for path, goal in zip(paths, goals):
-                    self.assertLessEqual(len(path), 4)
-                    self.assertEqual(path[-1], goal)
 
     def test_with_grid(self):
         """
@@ -248,12 +234,6 @@ class TestMAPF(unittest.TestCase):
                 paths = a["class"](grid).mapf(starts, goals, **a.get("params", {}))
                 self.assertEqual(paths, [])
 
-
-class TestComplete(unittest.TestCase):
-    """
-    pytest tests/mapf/test_mapf.py::TestComplete
-    """
-
     def test_edge_collision(self):
         """
         + -  -  -  -  -  -  - +
@@ -323,7 +303,7 @@ class TestComplete(unittest.TestCase):
                 paths = a["class"](grid).mapf(
                     starts, goals, max_time=10, **a.get("params", {})
                 )
-
+                print(a["name"], paths)
                 self.assertEqual(len(paths), 2)
                 self.assertTrue(check_paths(grid, paths))
                 for path, goal in zip(paths, goals):
@@ -352,7 +332,7 @@ class TestComplete(unittest.TestCase):
                     self.assertLessEqual(len(path), 5)
                     self.assertEqual(path[-1], goal)
 
-    def test_optimality(self):
+    def test_optimal(self):
         """
         + - - - - +
         |         |
@@ -389,7 +369,7 @@ class TestComplete(unittest.TestCase):
                     ],
                 )
 
-    def test_optimality_2(self):
+    def test_optimal_2(self):
         """
         + - - - - +
         |         |
@@ -428,4 +408,44 @@ class TestComplete(unittest.TestCase):
                         [(3, 0), (2, 0), (2, 0), (1, 0), (0, 0)],
                         [(3, 0), (3, 0), (2, 0), (1, 0), (0, 0)],
                     ],
+                )
+
+    def test_optimal_3(self):
+        grid = Grid(
+            [
+                [1.089, -1.0, 1.399, 0.613],
+                [1.076, -1.0, 0.508, 0.847],
+                [0.637, 1.400, 0.790, 0.634],
+                [0.51, 1.096, 0.910, 1.006],
+            ],
+            edge_collision=True,
+        )
+
+        starts = ((2, 3), (3, 1), (0, 1))
+        goals = ((1, 2), (0, 2), (3, 0))
+
+        for a in COMPLETE_ALGORITHMS:
+            if a["class"] is mapf.ICTS:
+                # not optimal in weighted environments
+                continue
+
+            with self.subTest(a["name"]):
+                paths = a["class"](grid).mapf(
+                    starts, goals, max_time=10, **a.get("params", {})
+                )
+                self.assertEqual(len(paths), 3)
+                self.assertTrue(check_paths(grid, paths))
+
+                self.assertIn(
+                    paths[0],
+                    (
+                        [(2, 3), (1, 3), (1, 3), (1, 2)],
+                        [(2, 3), (2, 3), (1, 3), (1, 2)],
+                    ),
+                )
+                self.assertListEqual(
+                    paths[1], [(3, 1), (2, 1), (2, 2), (2, 3), (1, 3), (0, 3), (0, 2)]
+                )
+                self.assertListEqual(
+                    paths[2], [(0, 1), (0, 2), (1, 2), (2, 2), (2, 1), (3, 1), (3, 0)]
                 )

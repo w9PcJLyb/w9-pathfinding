@@ -17,9 +17,6 @@ class timeout_exception : public std::runtime_error {
 };
 
 
-void ensure_path_length(Path& path, int length);
-
-
 bool has_collision(const vector<int>& positions, const vector<int>& next_positions, bool edge_collision);
 
 

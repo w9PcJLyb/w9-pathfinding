@@ -1,15 +1,6 @@
 #include "include/mapf.h"
 
 
-void ensure_path_length(Path& path, int length) {
-    if ((int)path.size() >= length + 1)
-        return;
-
-    vector<int> rest(length + 1 - path.size(), path.back());
-    path.insert(path.end(), rest.begin(), rest.end());
-}
-
-
 bool has_collision(const vector<int>& positions, const vector<int>& next_positions, bool edge_collision) {
     std::unordered_map<int, int> node_to_agent;
     for (size_t i = 0; i < next_positions.size(); i++) {
