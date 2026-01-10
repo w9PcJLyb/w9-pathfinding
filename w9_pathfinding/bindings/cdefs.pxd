@@ -220,7 +220,7 @@ cdef extern from "cbs.h":
 
     cdef cppclass CBS(AbsMAPF):
         int num_generated_nodes, num_closed_nodes
-        CBS(Env*) except +
+        CBS(Env*, int seed) except +
         vector[vector[int]] mapf(vector[int], vector[int], int, double, bool, ReservationTable*) except +
 
 

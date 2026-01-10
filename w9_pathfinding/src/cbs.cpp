@@ -8,7 +8,20 @@ using std::chrono::duration;
 using std::chrono::high_resolution_clock;
 
 
-CBS::CBS(Env* env) : env(env), st_a_star_(env), generator_(std::random_device{}()) {
+CBS::CBS(Env* env) : CBS(env, -1) {
+}
+
+CBS::CBS(Env* env, int seed) : env(env), st_a_star_(env) {
+    set_seed(seed);
+}
+
+void CBS::set_seed(int seed) {
+    if (seed >= 0) {
+        generator_.seed(seed);
+    } else {
+        std::random_device rd;
+        generator_.seed(rd());
+    }
 }
 
 vector<Path> CBS::mapf(vector<int> starts, vector<int> goals) {

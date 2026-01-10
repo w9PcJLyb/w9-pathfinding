@@ -661,6 +661,11 @@ cdef class CBS(_AbsMAPF):
     ----------
     env : Environment
         The environment in which to search for paths.
+    seed : int, optional, default None
+        Seed for the solver's internal random number generator. Setting the seed
+        makes the results reproducible for the same input.
+
+        The seed only affects the solver behavior when `disjoint_splitting=True`.
 
     References
     ----------
@@ -670,9 +675,13 @@ cdef class CBS(_AbsMAPF):
 
     cdef cdefs.CBS* _obj
 
-    def __cinit__(self, _Env env):
+    def __cinit__(self, _Env env, seed=None):
         self.env = env
-        self._obj = new cdefs.CBS(env._baseobj)
+        if seed is None:
+            seed = -1
+        elif seed < 0:
+            raise ValueError("Seed must be None or a non-negative integer")
+        self._obj = new cdefs.CBS(env._baseobj, seed)
         self._baseobj = self._obj
 
     def __dealloc__(self):
