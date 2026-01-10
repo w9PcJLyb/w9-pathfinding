@@ -88,6 +88,7 @@ class CBS : public AbsMAPF {
         int num_generated_nodes = 0;
         int num_closed_nodes = 0;
 
+        void set_seed(int seed);
         vector<Path> mapf(vector<int> starts, vector<int> goals);
         vector<Path> mapf(
             vector<int> starts,
@@ -113,7 +114,6 @@ class CBS : public AbsMAPF {
         void print_constraint(Constraint &constraint);
         int random_int(int max_value);
         bool is_point_at_time(Path& path, int point, int time);
-        void set_seed(int seed);
         vector<Path> mapf_(
             vector<Agent> &agents,
             int max_length,

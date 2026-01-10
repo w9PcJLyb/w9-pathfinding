@@ -677,11 +677,7 @@ cdef class CBS(_AbsMAPF):
 
     def __cinit__(self, _Env env, seed=None):
         self.env = env
-        if seed is None:
-            seed = -1
-        elif seed < 0:
-            raise ValueError("Seed must be None or a non-negative integer")
-        self._obj = new cdefs.CBS(env._baseobj, seed)
+        self._obj = new cdefs.CBS(env._baseobj, self._to_cpp_seed(seed))
         self._baseobj = self._obj
 
     def __dealloc__(self):
@@ -700,6 +696,33 @@ cdef class CBS(_AbsMAPF):
         Number of Constraint Tree (CT) nodes expanded (processed) during the last search.
         """
         return self._obj.num_closed_nodes
+
+    @staticmethod
+    def _to_cpp_seed(seed):
+        """
+        Convert a Python seed value to the C++ representation.
+        """
+        if seed is None:
+            return -1
+        if not isinstance(seed, int):
+            raise TypeError("Seed must be an integer or None")
+        if seed < 0:
+            raise ValueError("Seed must be None or a non-negative integer")
+        return seed
+
+    def set_seed(self, seed) -> None:
+        """
+        Reset the seed for the solver's random number generator.
+
+        The seed only affects the solver behavior when `disjoint_splitting=True`.
+
+        Parameters
+        ----------
+        seed : int or None
+            Non-negative integer for reproducible results, or None to use
+            nondeterministic behavior.
+        """
+        self._obj.set_seed(self._to_cpp_seed(seed))
 
     @_mapf
     def mapf(
