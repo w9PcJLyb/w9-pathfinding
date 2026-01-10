@@ -719,7 +719,7 @@ cdef class CBS(_AbsMAPF):
             The maximum allowed length of any individual agent's path.
 
         max_time : float, default=1.0
-            The maximum amount of time (in seconds) allowed for CBS to find a solution.
+            The maximum amount of time (in seconds) allowed for the solver to find a solution.
             If the time limit is exceeded, a `RuntimeError` is raised.
 
         disjoint_splitting : bool, default=True
@@ -833,7 +833,7 @@ cdef class ICTS(_AbsMAPF):
             The maximum allowed length of any individual agent's path.
 
         max_time : float, default=1.0
-            The maximum amount of time (in seconds) allowed for CBS to find a solution.
+            The maximum amount of time (in seconds) allowed for the solver to find a solution.
             If the time limit is exceeded, a `RuntimeError` is raised.
 
         ict_pruning : bool, default=True
@@ -926,7 +926,7 @@ cdef class MultiAgentAStar(_AbsMAPF):
             The maximum allowed length of any individual agent's path.
 
         max_time : float, default=1.0
-            The maximum amount of time (in seconds) allowed for CBS to find a solution.
+            The maximum amount of time (in seconds) allowed the solver to find a solution.
             If the time limit is exceeded, a `RuntimeError` is raised.
 
         operator_decomposition : bool, default=True
