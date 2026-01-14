@@ -84,9 +84,11 @@ class CBS : public AbsMAPF {
     public:
         Env* env;
         CBS(Env* env);
+        CBS(Env* env, int seed);
         int num_generated_nodes = 0;
         int num_closed_nodes = 0;
 
+        void set_seed(int seed);
         vector<Path> mapf(vector<int> starts, vector<int> goals);
         vector<Path> mapf(
             vector<int> starts,
@@ -99,7 +101,7 @@ class CBS : public AbsMAPF {
 
     private:
         SpaceTimeAStar st_a_star_;
-        std::mt19937 generator_;
+        std::mt19937 rng_;
 
         vector<Constraint> find_conflict(vector<Path> &paths, bool find_random, bool disjoint_splitting);
         vector<Constraint> split_conflict(vector<Path> &paths, vector<int>& agent_ids, Conflict& conflict, bool disjoint_splitting);

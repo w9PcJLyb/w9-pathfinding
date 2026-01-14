@@ -69,6 +69,19 @@ class SpaceTimeAStar {
 
     private:
         std::unique_ptr<ResumableSearch> rrs_;
+        typedef pair<double, Node*> key;
+
+        struct KeyCompare {
+            bool operator()(const key& a, const key& b) const {
+                if (a.first != b.first)
+                    return a.first > b.first;  // smaller cost first
+
+                if (a.second->node_id != b.second->node_id)
+                    return a.second->node_id > b.second->node_id;
+
+                return a.second->time > b.second->time; // earlier time first
+            }
+        };
 
         ResumableSearch* ensure_rrs(ResumableSearch* rrs, int goal);
         Path reconstruct_path(int start, Node* node);

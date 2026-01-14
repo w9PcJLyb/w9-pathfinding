@@ -57,8 +57,7 @@ Path SpaceTimeAStar::find_path_with_depth_limit(
     int env_size = env->size();
     int max_terminal_time = start_time + search_depth;
 
-    typedef pair<double, Node*> key;
-    priority_queue<key, vector<key>, std::greater<key>> openset;
+    priority_queue<key, vector<key>, KeyCompare> openset;
 
     std::unordered_map<int, Node> nodes;
     nodes.emplace(start, Node(nullptr, start, start_time, 0, f0));
@@ -142,8 +141,7 @@ Path SpaceTimeAStar::find_path_with_exact_length(
     int env_size = env->size();
     int terminal_time = start_time + length;
 
-    typedef pair<double, Node*> key;
-    priority_queue<key, vector<key>, std::greater<key>> openset;
+    priority_queue<key, vector<key>, KeyCompare> openset;
 
     std::unordered_map<int, Node> nodes;
     nodes.emplace(start, Node(nullptr, start, start_time, 0, 0));
@@ -223,8 +221,7 @@ Path SpaceTimeAStar::find_path_with_length_limit(
     int env_size = env->size();
     int terminal_time = start_time + max_length;
 
-    typedef pair<double, Node*> key;
-    priority_queue<key, vector<key>, std::greater<key>> openset;
+    priority_queue<key, vector<key>, KeyCompare> openset;
 
     std::unordered_map<int, Node> nodes;
     nodes.emplace(start, Node(nullptr, start, start_time, 0, 0));
