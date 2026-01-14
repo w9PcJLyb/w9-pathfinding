@@ -3,6 +3,12 @@ Release history
 
 `View on PyPI <https://pypi.org/project/w9-pathfinding/#history>`_
 
+**0.1.3** (2026-01-14)
+
+- Fixed unintended nondeterministic behavior in several MAPF algorithms
+  (HCA*, WHCA*, and CBS).
+- Added an optional random seed parameter to enable reproducible results in CBS.
+
 **0.1.2** (2025-08-03)
 
 - Fixed various bugs in MAPF algorithms.
