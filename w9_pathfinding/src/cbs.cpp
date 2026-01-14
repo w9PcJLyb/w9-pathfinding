@@ -17,10 +17,10 @@ CBS::CBS(Env* env, int seed) : env(env), st_a_star_(env) {
 
 void CBS::set_seed(int seed) {
     if (seed >= 0) {
-        generator_.seed(seed);
+        rng_.seed(seed);
     } else {
         std::random_device rd;
-        generator_.seed(rd());
+        rng_.seed(rd());
     }
 }
 
@@ -56,7 +56,7 @@ void CBS::print_constraint(Constraint &constraint) {
 
 int CBS::random_int(int max_value) {
     std::uniform_int_distribution<> distribution(0, max_value - 1);
-    return distribution(generator_);
+    return distribution(rng_);
 }
 
 bool CBS::is_point_at_time(Path& path, int point, int time) {
