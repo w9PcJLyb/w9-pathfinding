@@ -238,3 +238,13 @@ cdef extern from "multi_agent_a_star.h" namespace "maas":
     cdef cppclass MultiAgentAStar(AbsMAPF):
         MultiAgentAStar(Env*) except +
         vector[vector[int]] mapf(vector[int], vector[int], int, double, bool, ReservationTable*) except +
+
+
+cdef extern from "resumable_space_time_dijkstra.h":
+
+    cdef cppclass ResumableSpaceTimeDijkstra:
+        ResumableSpaceTimeDijkstra(Env*, int, int, ReservationTable*) except +
+        double distance(int, int)
+        vector[int] find_path(int, int)
+        int start_node()
+        void set_start_node(int)

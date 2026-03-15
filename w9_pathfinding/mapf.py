@@ -1,6 +1,7 @@
 from .bindings.mapf import (
-    SpaceTimeAStar,
     ReservationTable,
+    SpaceTimeAStar,
+    ResumableSpaceTimeDijkstra,
     HCAStar,
     WHCAStar,
     CBS,
