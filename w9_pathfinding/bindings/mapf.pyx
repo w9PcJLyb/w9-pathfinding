@@ -422,7 +422,7 @@ cdef class ResumableSpaceTimeDijkstra:
         self,
         _Env env,
         start_node,
-        ReservationTable reservation_table,
+        ReservationTable reservation_table=None,
         int time_horizon=100,
     ):
         self.env = env

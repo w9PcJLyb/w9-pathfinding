@@ -118,24 +118,31 @@ ResumableSpaceTimeDijkstra::Node* ResumableSpaceTimeDijkstra::search(int goal, i
         auto [distance, current] = openset_.top();
         openset_.pop();
 
-        int current_time = current->time;
+        int t = current->time;
+        int n = current->node_id;
 
         if (current->closed)
             continue;
 
         // expand node
-        if (current_time < time_horizon_) {
-            auto reserved_edges = rt_->get_reserved_edges(current_time, current->node_id);
-            for (auto &[node_id, cost] : env->get_neighbors(current->node_id, false, true)) {
-                if (!reserved_edges.count(node_id) && !rt_->is_reserved(current_time + 1, node_id))
+        if (t < time_horizon_) {
+            if (!rt_) {
+                for (auto &[node_id, cost] : env->get_neighbors(n, false, true))
                     process_node(node_id, cost, current);
+            }
+            else {
+                auto reserved_edges = rt_->get_reserved_edges(t, n);
+                for (auto &[node_id, cost] : env->get_neighbors(n, false, true)) {
+                    if (!reserved_edges.count(node_id) && !rt_->is_reserved(t + 1, node_id))
+                        process_node(node_id, cost, current);
+                }
             }
         }
 
         current->closed = true;
 
-        if (current->node_id == goal)
-            if (time < 0 || current_time == time) {
+        if (n == goal)
+            if (time < 0 || t == time) {
                 return current;
             }
         }
