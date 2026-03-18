@@ -3,6 +3,10 @@ Release history
 
 `View on PyPI <https://pypi.org/project/w9-pathfinding/#history>`_
 
+**unpublished**
+
+- Added `ResumableSpaceTimeDijkstra`
+
 **0.1.3** (2026-01-14)
 
 - Fixed unintended nondeterministic behavior in several MAPF algorithms
