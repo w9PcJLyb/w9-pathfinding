@@ -21,6 +21,23 @@ class TestResumableSpaceTimeDijkstra(unittest.TestCase):
         for n, ans in [((0, 0), 3), ((0, 1), inf), ((0, 2), 3)]:
             self.assertEqual(rs.distance(n), ans)
 
+    def test_time_horizon(self):
+        grid = Grid([[1, 1, 1, 1]])
+
+        for time_horizon, distance_answer, path_answer in [
+            (2, float("inf"), []),
+            (3, 3, [(0, 0), (1, 0), (2, 0), (3, 0)]),
+            (4, 3, [(0, 0), (1, 0), (2, 0), (3, 0)]),
+        ]:
+            with self.subTest(f"time_horizon={time_horizon}"):
+                rs = ResumableSpaceTimeDijkstra(grid, (0, 0), time_horizon=time_horizon)
+
+                path = rs.find_path((3, 0))
+                self.assertEqual(path, path_answer)
+
+                distance = rs.distance((3, 0))
+                self.assertEqual(distance, distance_answer)
+
     def test_reservation_table(self):
         grid = Grid([[1, 1, 1], [1, -1, 1], [1, 1, 1]], edge_collision=True)
         rt = ReservationTable(grid)
