@@ -42,6 +42,7 @@ with one another.
 
    ReservationTable
    SpaceTimeAStar
+   ResumableSpaceTimeDijkstra
    HCAStar
    WHCAStar
    CBS

@@ -415,6 +415,43 @@ cdef class SpaceTimeAStar:
 
 
 cdef class ResumableSpaceTimeDijkstra:
+    """
+    Space-time version of Resumable Dijkstra's algorithm.
+
+    This class performs a single-source Dijkstra traversal in a time-expanded
+    graph starting from `(start_node, 0)`. It supports dynamic obstacles via
+    a `ReservationTable`, and allows querying shortest-path distances and paths
+    to nodes at specific times.
+
+    Unlike standard Dijkstra's algorithm, results are cached and reused
+    efficiently for multiple distance/path queries without re-running the
+    full search.
+
+    It guarantees to find the optimal path in any environment.
+
+    The search only considers states `(node, t)` where `t <= time_horizon`.
+
+    Parameters
+    ----------
+    env : Environment
+        The environment in which to search for paths.
+
+    start_node : node
+        The source node. The search starts from `(start_node, 0)`.
+
+    reservation_table : ReservationTable, optional
+        Dynamic obstacles.
+
+    time_horizon : int, default=100
+        Maximum time step considered by the search. States with time greater
+        than `time_horizon` are not explored.
+
+    Raises
+    ------
+    ValueError
+        If `start_node` is not a valid node in the environment.
+    """
+
     cdef cdefs.ResumableSpaceTimeDijkstra* _obj
     cdef readonly _Env env
 
@@ -451,15 +488,51 @@ cdef class ResumableSpaceTimeDijkstra:
 
     @property
     def start_node(self):
+        """
+        The current start node for the search.
+
+        This is the node from which all paths and distances are computed,
+        starting at time `t = 0`.
+
+        You can get or set this property. Setting a new start node will
+        reset internal state and rerun Dijkstra's algorithm in the next query.
+        """
         node_id = self._obj.start_node()
         return self.env._node_mapper.from_id(node_id)
 
     @start_node.setter
     def start_node(self, start_node):
+        """
+        Set a new start node for the Dijkstra's traversal.
+        """
         node_id = self.env._node_mapper.to_id(start_node)
         self._obj.set_start_node(node_id)
 
     def distance(self, node, time=None):
+        """
+        Get the shortest-path cost from `(start_node, 0)` to the given node.
+
+        Parameters
+        ----------
+        node : node
+            The target node.
+
+        time : int, optional
+            The arrival time. If provided, returns the cost to reach
+            `(node, time)`. If `None`, returns the minimum cost to reach
+            the node at any time `t <= time_horizon`.
+
+        Returns
+        -------
+        float
+            The minimum cost from `(start_node, 0)` to the target.
+            Returns `float('inf')` if the node is unreachable.
+
+        Raises
+        ------
+        ValueError
+            If `node` is not a valid node in the environment.
+        """
         if time is None:
             time = -1
         else:
@@ -469,6 +542,33 @@ cdef class ResumableSpaceTimeDijkstra:
         return d if d >= 0 else float("inf")
 
     def find_path(self, node, time=None):
+        """
+        Find the optimal path from `(start_node, 0)` to the given node.
+
+        Parameters
+        ----------
+        node : node
+            The target node.
+
+        time : int, optional
+            The arrival time. If provided, returns a path that reaches
+            `(node, time)`. If `None`, returns the optimal path reaching
+            the node at any time `t <= time_horizon`.
+
+        Returns
+        -------
+        list[node]
+            A list of nodes representing the optimal path.
+            If a path is found, the list starts with `start_node`
+            and ends with `node`. Returns an empty list if the node
+            is unreachable.
+
+        Raises
+        ------
+        ValueError
+            If `node` is not a valid node in the environment.
+        """
+
         if time is None:
             time = -1
         else:
