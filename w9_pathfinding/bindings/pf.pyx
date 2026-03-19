@@ -528,7 +528,7 @@ cdef class ResumableDijkstra:
         This is the source node from which all distances and paths are computed.
 
         You can get or set this property. Setting a new start node will
-        reset internal state and rerun Dijkstra's algorithm in the next query..
+        reset internal state and rerun Dijkstra's algorithm in the next query.
         """
         node_id = self._obj.start_node()
         return self.env._node_mapper.from_id(node_id)

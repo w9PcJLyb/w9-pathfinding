@@ -303,7 +303,6 @@ class TestGridMAPF(unittest.TestCase):
                 paths = a["class"](grid).mapf(
                     starts, goals, max_time=10, **a.get("params", {})
                 )
-                print(a["name"], paths)
                 self.assertEqual(len(paths), 2)
                 self.assertTrue(check_paths(grid, paths))
                 for path, goal in zip(paths, goals):

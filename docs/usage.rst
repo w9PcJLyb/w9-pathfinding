@@ -117,10 +117,11 @@ But this would be inefficient, because each call would re-run the entire search 
 Instead, we can use **Resumable Search**, which reuses intermediate results efficiently
 for multiple path queries from the same start node.
 
-There are two options:
+Depending on the environment, you can use one of the following:
 
 - :ref:`ResumableBFS` — for unweighted environments
 - :ref:`ResumableDijkstra` — for weighted environments
+- :ref:`ResumableSpaceTimeDijkstra` - for environments with dynamic obstacles
 
 Let's look at how to use `ResumableDijkstra` on a weighted grid:
 

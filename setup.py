@@ -59,6 +59,7 @@ ext_modules = [
                 "mapf",
                 "reservation_table",
                 "resumable_search",
+                "resumable_space_time_dijkstra",
                 "space_time_a_star",
                 "hc_a_star",
                 "whc_a_star",
