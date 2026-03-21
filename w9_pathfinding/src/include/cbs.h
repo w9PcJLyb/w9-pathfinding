@@ -66,15 +66,11 @@ class CBS : public AbsMAPF {
         // Constraint Tree Node
         int parent;
         vector<Path> solutions;
-        vector<double> costs;
         Constraint constraint;
+        double cost;
 
         CTNode() : parent(-1), constraint() {};
         CTNode(int parent, Constraint constraint) : parent(parent), constraint(constraint) {};
-
-        double total_cost() {
-            return std::accumulate(costs.begin(), costs.end(), 0.);
-        }
     };
 
     typedef pair<double, int> key;
@@ -114,6 +110,7 @@ class CBS : public AbsMAPF {
         void print_constraint(Constraint &constraint);
         int random_int(int max_value);
         bool is_point_at_time(Path& path, int point, int time);
+        double high_level_heuristics(CTNode &ct_node);
         vector<Path> mapf_(
             vector<Agent> &agents,
             int max_length,
